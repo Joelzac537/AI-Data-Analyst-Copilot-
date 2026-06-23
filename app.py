@@ -20,13 +20,29 @@ st.sidebar.markdown(
 st.sidebar.divider()
 
 # Load and Cache Iowa Liquor Sales dataset directly from Iowa Data Hub
-@st.cache_data(show_spinner="Loading Iowa Liquor Sales 2025 Dataset from Iowa Data Hub...")
+# Load and Cache Iowa Liquor Sales dataset directly from Iowa Data Hub
+@st.cache_data(show_spinner="Loading full Iowa Liquor Sales 2025 dataset...")
 def load_cached_data():
     SAMPLE_URL = "https://idh-be.iowa.gov/api/v1/datasets/1262/rows.csv"
 
-    df = pd.read_csv(SAMPLE_URL, low_memory=False, nrows=250000)
+    use_cols = [
+        "ordered_on",
+        "store_name",
+        "im_desc",
+        "county_name",
+        "vendor_name",
+        "sales_dollars",
+        "sales_bottles",
+        "sales_liters",
+        "bottle_volume_ml"
+    ]
 
-    # Data type cleanup
+    df = pd.read_csv(
+        SAMPLE_URL,
+        usecols=use_cols,
+        low_memory=False
+    )
+
     df["ordered_on"] = pd.to_datetime(df["ordered_on"], errors="coerce")
     df["sales_dollars"] = pd.to_numeric(df["sales_dollars"], errors="coerce")
     df["sales_bottles"] = pd.to_numeric(df["sales_bottles"], errors="coerce")
@@ -37,10 +53,11 @@ def load_cached_data():
 
     return df
 
+
 df = load_cached_data()
 
 if df is not None:
-    st.sidebar.success(f"Cached {df.shape[0]:,} sample rows successfully!")
+    st.sidebar.success(f"Cached {df.shape[0]:,} rows successfully!")
 else:
     st.stop()
 

@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Iowa Liquor Sales Intelligence Dashboard</title>
+  <meta name="description" content="A premium data dashboard hosting exploratory data analysis, GPT-4o performance evaluations, and machine learning sales forecasts for the 2025 Iowa Liquor Sales dataset.">
+  
+  <!-- Premium Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  
+  <!-- CSS Stylesheet -->
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- App Header -->
+  <header>
+    <div class="logo-section">
+      <h1>Iowa Liquor Sales Intelligence</h1>
+      <p>NLP Feasibility Study & Sales Forecasting (EAI 6010)</p>
+    </div>
+    
+    <div class="header-controls">
+      <!-- Dark/Light Toggle Button -->
+      <button class="theme-btn" id="themeToggleBtn" aria-label="Toggle dark and light theme">
+        <!-- Moon Icon (Dark Mode) -->
+        <svg class="moon-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+        </svg>
+        <!-- Sun Icon (Light Mode) -->
+        <svg class="sun-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m0-12.728l.707.707m12.728 12.728l.707-.707M12 8a4 4 0 100 8 4 4 0 000-8z"></path>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- Tabbed Navigation Bar -->
+  <nav class="nav-tabs" aria-label="Main Navigation">
+    <button class="tab-btn active" data-tab="edaTab" id="edaTabBtn">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 002 2h2a2 2 0 002-2z"></path>
+      </svg>
+      Overview & EDA
+    </button>
+    
+    <button class="tab-btn" data-tab="gptTab" id="gptTabBtn">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364.364l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+      </svg>
+      GPT-4o Evaluation
+    </button>
+    
+    <button class="tab-btn" data-tab="forecastTab" id="forecastTabBtn">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+      </svg>
+      Sales Forecasting
+    </button>
+    
+    <button class="tab-btn" data-tab="playgroundTab" id="playgroundTabBtn">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path>
+      </svg>
+      Interactive Playground
+    </button>
+  </nav>
+
+  <!-- Main Display Area -->
+  <main>
+
+    <!-- TAB 1: OVERVIEW & EDA -->
+    <section id="edaTab" class="tab-content active">
+      
+      <!-- KPI Top Summary -->
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-icon">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+          </div>
+          <div class="kpi-info">
+            <h3>Total Sales Revenue</h3>
+            <div class="kpi-value" id="kpiSales">$424,834,283</div>
+          </div>
+        </div>
+        
+        <div class="kpi-card accent-card">
+          <div class="kpi-icon">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+            </svg>
+          </div>
+          <div class="kpi-info">
+            <h3>Total Bottles Sold</h3>
+            <div class="kpi-value" id="kpiBottles">30,441,277</div>
+          </div>
+        </div>
+        
+        <div class="kpi-card">
+          <div class="kpi-icon">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+            </svg>
+          </div>
+          <div class="kpi-info">
+            <h3>Unique Stores</h3>
+            <div class="kpi-value" id="kpiStores">2,300</div>
+          </div>
+        </div>
+        
+        <div class="kpi-card">
+          <div class="kpi-icon">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+            </svg>
+          </div>
+          <div class="kpi-info">
+            <h3>Unique Products</h3>
+            <div class="kpi-value" id="kpiProducts">4,356</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Graph & Aggregate List Grid -->
+      <div class="dashboard-grid">
+        
+        <!-- Monthly Revenue Chart -->
+        <div class="card">
+          <div class="card-header">
+            <h2>
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+              </svg>
+              Iowa Liquor Sales — Monthly Revenue 2025
+            </h2>
+          </div>
+          <div class="chart-container">
+            <canvas id="monthlySalesChart"></canvas>
+          </div>
+        </div>
+        
+        <!-- Top 10 Entities Card -->
+        <div class="card">
+          <div class="card-header">
+            <h2 id="topEntityTitle">Top 10 Stores</h2>
+            <div class="card-controls">
+              <button class="pill-btn active" id="btnStores" onclick="switchTopEntity('stores')">Stores</button>
+              <button class="pill-btn" id="btnProducts" onclick="switchTopEntity('products')">Products</button>
+              <button class="pill-btn" id="btnCounties" onclick="switchTopEntity('counties')">Counties</button>
+              <button class="pill-btn" id="btnVendors" onclick="switchTopEntity('vendors')">Vendors</button>
+            </div>
+          </div>
+          <div class="table-container">
+            <table id="topEntitiesTable">
+              <thead>
+                <tr>
+                  <th style="width: 60px;">Rank</th>
+                  <th id="tableEntityHeader">Store Name</th>
+                  <th style="text-align: right;">Total Sales ($)</th>
+                </tr>
+              </thead>
+              <tbody id="topEntitiesBody">
+                <!-- Javascript will render table rows -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      
+    </section>
+
+    <!-- TAB 2: GPT-4o EVALUATION -->
+    <section id="gptTab" class="tab-content">
+      
+      <!-- Info banner outlining covered data constraints -->
+      <div class="banner info">
+        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+        <div class="banner-content">
+          <h4>Pre-Aggregation vs. Context Constraints</h4>
+          <p>
+            The full 2025 dataset consists of <strong>2,490,620 rows</strong>. At ~50-80 tokens per row, GPT-4o's context window can process a maximum of 1,600 to 2,560 raw lines directly. 
+            Thus, direct LLM reasoning covers <strong>less than 0.1%</strong> of the dataset. For accurate results in production, a pre-aggregation step or a <strong>Retrieval-Augmented Generation (RAG)</strong> pipeline is essential.
+          </p>
+        </div>
+      </div>
+
+      <!-- Performance Metrics -->
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-icon">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+          </div>
+          <div class="kpi-info">
+            <h3>Evaluation Accuracy</h3>
+            <div class="kpi-value">80% <span style="font-size: 0.9rem; color: var(--text-secondary); font-weight: 500;">(4 / 5)</span></div>
+          </div>
+        </div>
+        
+        <div class="kpi-card">
+          <div class="kpi-icon">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+          </div>
+          <div class="kpi-info">
+            <h3>Average Latency</h3>
+            <div class="kpi-value">1.86s <span style="font-size: 0.8rem; color: var(--text-secondary); font-weight: 500;">per prompt</span></div>
+          </div>
+        </div>
+        
+        <div class="kpi-card accent-card">
+          <div class="kpi-icon">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M6 20h12a2 2 0 002-2V9a2 2 0 00-2-2h-1M9 21h6m-6-4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+            </svg>
+          </div>
+          <div class="kpi-info">
+            <h3>Total Tokens Consumed</h3>
+            <div class="kpi-value">5,909 <span style="font-size: 0.8rem; color: var(--text-secondary); font-weight: 500;">tokens</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Question Evaluations list -->
+      <div class="card">
+        <div class="card-header">
+          <h2>
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            Prompt Evaluation Log
+          </h2>
+        </div>
+        
+        <div class="eval-grid" id="evalGridContainer">
+          <!-- Javascript will render evaluation questions -->
+        </div>
+      </div>
+
+    </section>
+
+    <!-- TAB 3: SALES FORECASTING -->
+    <section id="forecastTab" class="tab-content">
+      
+      <div class="forecast-split">
+        
+        <!-- Forecasting Line Chart -->
+        <div class="card">
+          <div class="card-header">
+            <h2>
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+              </svg>
+              Iowa Liquor Sales — 2025 Actuals + 2026 Forecast
+            </h2>
+          </div>
+          <div class="chart-container">
+            <canvas id="forecastChart"></canvas>
+          </div>
+        </div>
+        
+        <!-- Interactive Sliders / Parameter controls -->
+        <div class="card">
+          <div class="card-header">
+            <h2>
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path>
+              </svg>
+              Forecast Controls
+            </h2>
+          </div>
+          
+          <div class="banner warning" style="margin-bottom: 1.25rem; padding: 0.8rem 1rem;">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+            </svg>
+            <div class="banner-content">
+              <h4 style="font-size: 0.85rem;">Linear Trend Limitation</h4>
+              <p style="font-size: 0.75rem;">
+                The linear regression model has a R² score of <strong>0.5942</strong>. It captures the overall upward trend, but fails to model the cyclical holiday spikes (e.g., October & December).
+              </p>
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+            <div class="kpi-card" style="padding: 1rem;">
+              <div class="kpi-info">
+                <h3>Linear Baseline R²</h3>
+                <div class="kpi-value" style="font-size: 1.2rem;">0.5942</div>
+              </div>
+            </div>
+            <div class="kpi-card accent-card" style="padding: 1rem;">
+              <div class="kpi-info">
+                <h3>June 2026 Prediction</h3>
+                <div class="kpi-value" id="kpiJunePrediction" style="font-size: 1.2rem;">$42.9M</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Parameter Adjusters -->
+          <div class="control-group">
+            <label for="sliderSlope">
+              <span>Monthly Growth Trend (Slope)</span>
+              <span class="value" id="valSlope">$651,904</span>
+            </label>
+            <input type="range" id="sliderSlope" class="range-slider" min="0" max="2000000" step="10000" value="651904">
+          </div>
+          
+          <div class="control-group">
+            <label for="sliderIntercept">
+              <span>Baseline Sales (Intercept)</span>
+              <span class="value" id="valIntercept">$31,165,478</span>
+            </label>
+            <input type="range" id="sliderIntercept" class="range-slider" min="20000000" max="40000000" step="50000" value="31165478">
+          </div>
+
+          <button class="reset-btn" id="btnResetForecast">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 8H17"></path>
+            </svg>
+            Reset to Baseline
+          </button>
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- TAB 4: INTERACTIVE PLAYGROUND -->
+    <section id="playgroundTab" class="tab-content">
+      
+      <div class="interactive-grid">
+        
+        <!-- Sub-panel A: Custom CSV Analytics -->
+        <div class="card">
+          <div class="card-header">
+            <h2>
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+              </svg>
+              Upload Custom CSV Dataset
+            </h2>
+          </div>
+          <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 1.25rem;">
+            Drag and drop or select a smaller sales CSV sample (columns should contain: <code>store_name</code>, <code>im_desc</code>, <code>county_name</code>, <code>sales_dollars</code>, <code>sales_bottles</code>) to run the EDA aggregates dynamically inside your browser.
+          </p>
+
+          <!-- Upload Dropzone -->
+          <label class="upload-container" id="dropzone" for="csvFileInput">
+            <div class="upload-icon">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+              </svg>
+            </div>
+            <div class="upload-text" id="uploadFilename">Drag & Drop CSV here</div>
+            <div class="upload-subtext">or click to browse local files</div>
+            <input type="file" id="csvFileInput" class="file-input" accept=".csv">
+          </label>
+          
+          <div id="loader" style="display: none;">
+            <div class="loader-spinner"></div>
+            <p style="font-size: 0.8rem; text-align: center; color: var(--text-secondary);">Analyzing data on the fly...</p>
+          </div>
+
+          <!-- Dynamic Analysis Results -->
+          <div id="uploadAnalysisResults" style="display: none; margin-top: 1.5rem;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem;">
+              <div class="kpi-card" style="padding: 0.8rem;">
+                <div class="kpi-info">
+                  <h3>Processed Rows</h3>
+                  <div class="kpi-value" id="dynRows" style="font-size: 1.2rem;">0</div>
+                </div>
+              </div>
+              <div class="kpi-card accent-card" style="padding: 0.8rem;">
+                <div class="kpi-info">
+                  <h3>Total Revenue</h3>
+                  <div class="kpi-value" id="dynSales" style="font-size: 1.2rem;">$0.00</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Top Store lists -->
+            <div style="font-size: 0.8rem; border-top: 1px solid var(--border-color); padding-top: 1rem;">
+              <h4 style="margin-bottom: 0.5rem; font-weight: 700;">Top 3 Stores by Revenue:</h4>
+              <ol id="dynTopList" style="padding-left: 1.2rem; font-weight: 500; line-height: 1.8; color: var(--text-secondary);">
+                <!-- Dynamic stores -->
+              </ol>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sub-panel B: Simulated RAG QA Agent -->
+        <div class="card">
+          <div class="card-header">
+            <h2>
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path>
+              </svg>
+              RAG Analytics Chat Assistant
+            </h2>
+          </div>
+          
+          <div class="chat-window">
+            <div class="chat-header">
+              <div class="chat-avatar">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                </svg>
+              </div>
+              <div class="chat-title">
+                <h4>Iowa Sales QA Agent</h4>
+                <p>Online — Aggregated RAG Mode</p>
+              </div>
+            </div>
+            
+            <div class="chat-messages" id="chatContainer">
+              <div class="chat-bubble bot">
+                Hello! I am your Iowa Liquor Sales assistant. I have access to the pre-aggregated 2025 dataset metrics. Ask me a question about stores, products, counties, or the monthly sales trend.
+                <span class="msg-time">12:26 PM</span>
+              </div>
+            </div>
+
+            <!-- Suggestion chips -->
+            <div class="chat-suggestions">
+              <button class="suggest-btn" onclick="sendSuggestedChat('Which store generated the highest total sales revenue in 2025?')">Top Store</button>
+              <button class="suggest-btn" onclick="sendSuggestedChat('What is the monthly trend of liquor sales?')">Monthly Trend</button>
+              <button class="suggest-btn" onclick="sendSuggestedChat('Which county had the lowest sales in the top 10?')">Lowest Top County</button>
+              <button class="suggest-btn" onclick="sendSuggestedChat('Tell me about the 2026 forecast predictions.')">2026 Forecast</button>
+            </div>
+
+            <!-- Input area -->
+            <div class="chat-input-bar">
+              <input type="text" class="chat-input" id="chatInputText" placeholder="Type your question..." aria-label="Chat input message">
+              <button class="chat-send-btn" id="chatSendBtn" aria-label="Send message">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- App Footer -->
+  <footer>
+    <p>Iowa Liquor Sales Dashboard &copy; 2026. Built for EAI 6010 NLP Service Feasibility Study.</p>
+  </footer>
+
+  <!-- Script Libraries -->
+  <!-- Chart.js via CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- PapaParse for CSV upload analysis via CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+
+  <!-- Dashboard JavaScript files -->
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

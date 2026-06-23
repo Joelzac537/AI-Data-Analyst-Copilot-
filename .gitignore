@@ -1,0 +1,7 @@
+.venv/
+__pycache__/
+*.pyc
+.streamlit/secrets.toml
+Data/*.csv
+eai6010_final_project.py
+Notebook/

@@ -54,13 +54,6 @@ def load_cached_data():
     return df
 
 
-df = load_cached_data()
-
-if df is not None:
-    st.sidebar.success(f"Cached {df.shape[0]:,} rows successfully!")
-else:
-    st.stop()
-
 # Sidebar Navigation Mode Selector
 nav_page = st.sidebar.radio(
     "Navigation Menu",
@@ -72,6 +65,19 @@ nav_page = st.sidebar.radio(
         "Custom CSV Upload"
     ]
 )
+
+# Load main Iowa dataset only on pages that need it
+main_data_pages = [
+    "Overview & EDA",
+    "Sales Forecasting",
+    "RAG Chat Assistant"
+]
+
+if nav_page in main_data_pages:
+    df = load_cached_data()
+    st.sidebar.success(f"Cached {df.shape[0]:,} rows successfully!")
+else:
+    df = None
 
 # Helper function to format currencies nicely
 def fmt_curr(val):

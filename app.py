@@ -88,17 +88,17 @@ if nav_page == "Overview & EDA":
 
     # Summary KPI Cards
     col1, col2, col3, col4 = st.columns(4)
-    
+
     total_sales = df['sales_dollars'].sum()
     total_bottles = df['sales_bottles'].sum()
     unique_stores = df['store_name'].nunique()
     unique_products = df['im_desc'].nunique()
 
     col1.metric("Total Sales Revenue", fmt_curr(total_sales))
-    col2.metric("Total Bottles Sold", f"{total_bottles:,}")
+    col2.metric("Total Bottles Sold", f"{int(total_bottles):,}")
     col3.metric("Unique Stores", f"{unique_stores:,}")
     col4.metric("Unique Products", f"{unique_products:,}")
-    
+
     st.divider()
 
     # Split screen for Monthly Sales Graph and Top 10 Lists
@@ -107,74 +107,75 @@ if nav_page == "Overview & EDA":
     with g_col1:
         st.subheader("Monthly Sales Revenue Trend (2025)")
 
-    df_monthly = (
-        df.groupby(df['ordered_on'].dt.to_period('M'))['sales_dollars']
-        .sum()
-        .reset_index()
-    )
-
-    df_monthly.columns = ['month', 'sales_dollars']
-    df_monthly['month'] = df_monthly['month'].dt.to_timestamp()
-    df_monthly = df_monthly.sort_values('month')
-
-    df_monthly['Month'] = df_monthly['month'].dt.strftime('%b %Y')
-    month_order = df_monthly['Month'].tolist()
-
-    chart = (
-        alt.Chart(df_monthly)
-        .mark_line(point=True)
-        .encode(
-            x=alt.X(
-                'Month:N',
-                sort=month_order,
-                title='Month',
-                axis=alt.Axis(labelAngle=0)
-            ),
-            y=alt.Y(
-                'sales_dollars:Q',
-                title='Revenue ($)',
-                axis=alt.Axis(format='$,.0f')
-            ),
-            tooltip=[
-                alt.Tooltip('Month:N', title='Month'),
-                alt.Tooltip('sales_dollars:Q', title='Revenue', format='$,.2f')
-            ]
+        df_monthly = (
+            df.groupby(df['ordered_on'].dt.to_period('M'))['sales_dollars']
+            .sum()
+            .reset_index()
         )
-        .properties(height=360)
-    )
 
-    st.altair_chart(chart, use_container_width=True)
+        df_monthly.columns = ['month', 'sales_dollars']
+        df_monthly['month'] = df_monthly['month'].dt.to_timestamp()
+        df_monthly = df_monthly.sort_values('month')
+
+        df_monthly['Month'] = df_monthly['month'].dt.strftime('%b %Y')
+        month_order = df_monthly['Month'].tolist()
+
+        chart = (
+            alt.Chart(df_monthly)
+            .mark_line(point=True)
+            .encode(
+                x=alt.X(
+                    'Month:N',
+                    sort=month_order,
+                    title='Month',
+                    axis=alt.Axis(labelAngle=0)
+                ),
+                y=alt.Y(
+                    'sales_dollars:Q',
+                    title='Revenue ($)',
+                    axis=alt.Axis(format='$,.0f')
+                ),
+                tooltip=[
+                    alt.Tooltip('Month:N', title='Month'),
+                    alt.Tooltip('sales_dollars:Q', title='Revenue', format='$,.2f')
+                ]
+            )
+            .properties(height=360)
+        )
+
+        st.altair_chart(chart, width="stretch")
 
     with g_col2:
         st.subheader("Top 10 Rankings")
-    rank_type = st.selectbox(
-        "Rank By Category",
-        ["Stores", "Products", "Counties", "Vendors"]
-    )
 
-    col_map = {
-        "Stores": "store_name",
-        "Products": "im_desc",
-        "Counties": "county_name",
-        "Vendors": "vendor_name"
-    }
+        rank_type = st.selectbox(
+            "Rank By Category",
+            ["Stores", "Products", "Counties", "Vendors"]
+        )
 
-    selected_col = col_map[rank_type]
-    top10 = (
-        df.groupby(selected_col)['sales_dollars']
-        .sum()
-        .sort_values(ascending=False)
-        .head(10)
-        .reset_index()
-    )
+        col_map = {
+            "Stores": "store_name",
+            "Products": "im_desc",
+            "Counties": "county_name",
+            "Vendors": "vendor_name"
+        }
 
-    top10.columns = [rank_type[:-1] + " Name", "Total Sales ($)"]
+        selected_col = col_map[rank_type]
+        top10 = (
+            df.groupby(selected_col)['sales_dollars']
+            .sum()
+            .sort_values(ascending=False)
+            .head(10)
+            .reset_index()
+        )
 
-    st.dataframe(
-        top10.style.format({"Total Sales ($)": "${:,.2f}"}),
-        use_container_width=True,
-        height=420
-    )
+        top10.columns = [rank_type[:-1] + " Name", "Total Sales ($)"]
+
+        st.dataframe(
+            top10.style.format({"Total Sales ($)": "${:,.2f}"}),
+            width="stretch",
+            height=420
+        )
 # ==========================================
 # PAGE 2: GPT-4o EVALUATION
 # ==========================================

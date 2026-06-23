@@ -107,8 +107,8 @@ if nav_page == "Overview & EDA":
 
     st.divider()
 
-    # Split screen for Monthly Sales Graph and Top 10 Lists
-    g_col1, g_col2 = st.columns([1.7, 1], gap="large")
+    # Monthly sales and top ranking section
+    g_col1, g_col2 = st.columns([1.5, 1], gap="large")
 
     with g_col1:
         st.subheader("Monthly Sales Revenue Trend (2025)")
@@ -126,7 +126,7 @@ if nav_page == "Overview & EDA":
         df_monthly['Month'] = df_monthly['month'].dt.strftime('%b %Y')
         month_order = df_monthly['Month'].tolist()
 
-        chart = (
+        monthly_chart = (
             alt.Chart(df_monthly)
             .mark_line(point=True)
             .encode(
@@ -149,7 +149,7 @@ if nav_page == "Overview & EDA":
             .properties(height=360)
         )
 
-        st.altair_chart(chart, width="stretch")
+        st.altair_chart(monthly_chart, width="stretch")
 
     with g_col2:
         st.subheader("Top 10 Rankings")
@@ -167,6 +167,7 @@ if nav_page == "Overview & EDA":
         }
 
         selected_col = col_map[rank_type]
+
         top10 = (
             df.groupby(selected_col)['sales_dollars']
             .sum()
@@ -175,13 +176,91 @@ if nav_page == "Overview & EDA":
             .reset_index()
         )
 
-        top10.columns = [rank_type[:-1] + " Name", "Total Sales ($)"]
+        top10.columns = ["name", "sales_dollars"]
+
+        table_df = top10.copy()
+        table_df.columns = [rank_type[:-1] + " Name", "Total Sales ($)"]
 
         st.dataframe(
-            top10.style.format({"Total Sales ($)": "${:,.2f}"}),
+            table_df.style.format({"Total Sales ($)": "${:,.2f}"}),
             width="stretch",
-            height=420
+            height=300
         )
+
+    st.divider()
+
+    # New visual 1: Dynamic Top 10 Bar Chart
+    st.subheader(f"Top 10 {rank_type} by Sales Revenue")
+
+    top10_bar = (
+        alt.Chart(top10)
+        .mark_bar()
+        .encode(
+            y=alt.Y(
+                "name:N",
+                sort="-x",
+                title=f"{rank_type[:-1]} Name"
+            ),
+            x=alt.X(
+                "sales_dollars:Q",
+                title="Revenue ($)",
+                axis=alt.Axis(format="$,.0f")
+            ),
+            tooltip=[
+                alt.Tooltip("name:N", title=f"{rank_type[:-1]}"),
+                alt.Tooltip("sales_dollars:Q", title="Revenue", format="$,.2f")
+            ]
+        )
+        .properties(height=380)
+    )
+
+    st.altair_chart(top10_bar, width="stretch")
+
+    st.divider()
+
+    # New visual 2: Product Revenue vs Bottles Sold Scatter Plot
+    st.subheader("Product Revenue vs. Bottles Sold")
+
+    st.markdown(
+        "This visual compares product-level sales volume with revenue to identify products that generate high revenue from high volume."
+    )
+
+    product_scatter = (
+        df.groupby("im_desc")
+        .agg(
+            total_revenue=("sales_dollars", "sum"),
+            total_bottles=("sales_bottles", "sum")
+        )
+        .reset_index()
+        .dropna()
+        .sort_values("total_revenue", ascending=False)
+        .head(100)
+    )
+
+    scatter_chart = (
+        alt.Chart(product_scatter)
+        .mark_circle(size=80, opacity=0.65)
+        .encode(
+            x=alt.X(
+                "total_bottles:Q",
+                title="Bottles Sold",
+                axis=alt.Axis(format=",.0f")
+            ),
+            y=alt.Y(
+                "total_revenue:Q",
+                title="Revenue ($)",
+                axis=alt.Axis(format="$,.0f")
+            ),
+            tooltip=[
+                alt.Tooltip("im_desc:N", title="Product"),
+                alt.Tooltip("total_bottles:Q", title="Bottles Sold", format=",.0f"),
+                alt.Tooltip("total_revenue:Q", title="Revenue", format="$,.2f")
+            ]
+        )
+        .properties(height=420)
+    )
+
+    st.altair_chart(scatter_chart, width="stretch")
 # ==========================================
 # PAGE 2: GPT-4o EVALUATION
 # ==========================================

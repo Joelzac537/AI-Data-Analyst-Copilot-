@@ -24,7 +24,7 @@ st.sidebar.divider()
 def load_cached_data():
     SAMPLE_URL = "https://idh-be.iowa.gov/api/v1/datasets/1262/rows.csv"
 
-    df = pd.read_csv(SAMPLE_URL, low_memory=False)
+    df = pd.read_csv(SAMPLE_URL, low_memory=False, nrows=250000)
 
     # Data type cleanup
     df["ordered_on"] = pd.to_datetime(df["ordered_on"], errors="coerce")
@@ -40,7 +40,7 @@ def load_cached_data():
 df = load_cached_data()
 
 if df is not None:
-    st.sidebar.success(f"Cached {df.shape[0]:,} rows successfully!")
+    st.sidebar.success(f"Cached {df.shape[0]:,} sample rows successfully!")
 else:
     st.stop()
 

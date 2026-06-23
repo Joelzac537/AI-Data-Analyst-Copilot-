@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import altair as alt
-from backend import ask_gpt4o
+from backend import ask_gpt4o, ask_gpt4o_from_context
 
 # Set page config for a premium wide layout
 st.set_page_config(
@@ -454,7 +454,7 @@ elif nav_page == "RAG Chat Assistant":
 elif nav_page == "Custom CSV Upload":
     st.title("📁 Upload Custom Sales Dataset")
     st.markdown(
-        "Upload a smaller subset CSV of sales transactions to perform metrics calculations dynamically."
+        "Upload a smaller or large sales transaction CSV. The app processes it in chunks to avoid memory crashes."
     )
 
     custom_file = st.file_uploader(
@@ -465,55 +465,170 @@ elif nav_page == "Custom CSV Upload":
 
     if custom_file is not None:
         try:
-            custom_df = pd.read_csv(custom_file)
+            CHUNK_SIZE = 100000
 
-            if 'store_name' in custom_df.columns and 'sales_dollars' in custom_df.columns:
-                st.success("CSV file loaded successfully!")
+            needed_cols = [
+                "ordered_on",
+                "store_name",
+                "im_desc",
+                "county_name",
+                "vendor_name",
+                "sales_dollars",
+                "sales_bottles",
+                "sales_liters",
+                "bottle_volume_ml"
+            ]
 
-                # Clean numeric column
-                custom_df['sales_dollars'] = pd.to_numeric(custom_df['sales_dollars'], errors='coerce')
-                custom_df = custom_df.dropna(subset=['sales_dollars'])
+            total_rows = 0
+            total_revenue = 0.0
+            total_bottles = 0.0
 
-                # Metrics
-                col_row, col_sales = st.columns(2)
-                col_row.metric("Total Rows", f"{custom_df.shape[0]:,}")
+            store_sales = {}
+            product_sales = {}
+            county_sales = {}
+            vendor_sales = {}
+            monthly_sales = {}
 
-                total_rev = custom_df['sales_dollars'].sum()
-                col_sales.metric("Total Sales Revenue", fmt_curr(total_rev))
+            required_columns_found = False
 
-                # Dynamic top stores
-                st.subheader("Top 3 Stores by Sales Revenue")
-                top3 = (
-                    custom_df.groupby('store_name')['sales_dollars'].sum()
-                    .sort_values(ascending=False)
-                    .head(3)
-                )
+            for chunk in pd.read_csv(
+                custom_file,
+                low_memory=False,
+                usecols=lambda col: col in needed_cols,
+                chunksize=CHUNK_SIZE
+            ):
+                if "store_name" not in chunk.columns or "sales_dollars" not in chunk.columns:
+                    st.error("Missing columns. Ensure your CSV contains 'store_name' and 'sales_dollars' columns.")
+                    st.stop()
 
-                for idx, (name, val) in enumerate(top3.items()):
-                    st.write(f"{idx+1}. **{name}**: {fmt_curr(val)}")
+                required_columns_found = True
 
-                # GPT-4o integration for uploaded CSV
-                st.divider()
-                st.subheader("Ask GPT-4o About Uploaded CSV")
+                chunk["sales_dollars"] = pd.to_numeric(chunk["sales_dollars"], errors="coerce")
+                chunk = chunk.dropna(subset=["sales_dollars"])
 
-                custom_question = st.text_input(
-                    "Ask a question about your uploaded CSV",
-                    placeholder="Example: Which store has the highest sales in this uploaded file?"
-                )
+                total_rows += len(chunk)
+                total_revenue += chunk["sales_dollars"].sum()
 
-                if st.button("Ask GPT-4o About Uploaded CSV"):
-                    if not custom_question.strip():
-                        st.warning("Please enter a question.")
-                    else:
-                        with st.spinner("GPT-4o is analyzing the uploaded file summary..."):
-                            custom_reply = ask_gpt4o(custom_question, custom_df)
+                if "sales_bottles" in chunk.columns:
+                    chunk["sales_bottles"] = pd.to_numeric(chunk["sales_bottles"], errors="coerce")
+                    total_bottles += chunk["sales_bottles"].sum()
 
-                        st.markdown("### GPT-4o Response")
-                        st.write(custom_reply["text"])
-                        st.caption(f"**Retrieved Context:** {custom_reply['citation']}")
+                temp_store = chunk.groupby("store_name")["sales_dollars"].sum()
+                for store, value in temp_store.items():
+                    store_sales[store] = store_sales.get(store, 0.0) + value
 
-            else:
-                st.error("Missing columns. Ensure your CSV contains 'store_name' and 'sales_dollars' columns.")
+                if "im_desc" in chunk.columns:
+                    temp_product = chunk.groupby("im_desc")["sales_dollars"].sum()
+                    for product, value in temp_product.items():
+                        product_sales[product] = product_sales.get(product, 0.0) + value
+
+                if "county_name" in chunk.columns:
+                    temp_county = chunk.groupby("county_name")["sales_dollars"].sum()
+                    for county, value in temp_county.items():
+                        county_sales[county] = county_sales.get(county, 0.0) + value
+
+                if "vendor_name" in chunk.columns:
+                    temp_vendor = chunk.groupby("vendor_name")["sales_dollars"].sum()
+                    for vendor, value in temp_vendor.items():
+                        vendor_sales[vendor] = vendor_sales.get(vendor, 0.0) + value
+
+                if "ordered_on" in chunk.columns:
+                    chunk["ordered_on"] = pd.to_datetime(chunk["ordered_on"], errors="coerce")
+                    month_chunk = chunk.dropna(subset=["ordered_on"])
+
+                    if not month_chunk.empty:
+                        temp_month = month_chunk.groupby(
+                            month_chunk["ordered_on"].dt.to_period("M")
+                        )["sales_dollars"].sum()
+
+                        for month, value in temp_month.items():
+                            monthly_sales[str(month)] = monthly_sales.get(str(month), 0.0) + value
+
+            if not required_columns_found:
+                st.error("Unable to read required columns from the uploaded CSV.")
+                st.stop()
+
+            st.success("CSV file loaded successfully!")
+
+            col_row, col_sales = st.columns(2)
+            col_row.metric("Total Rows", f"{total_rows:,}")
+            col_sales.metric("Total Sales Revenue", fmt_curr(total_revenue))
+
+            if total_bottles > 0:
+                st.metric("Total Bottles Sold", f"{int(total_bottles):,}")
+
+            st.subheader("Top 3 Stores by Sales Revenue")
+
+            top3_stores = (
+                pd.Series(store_sales)
+                .sort_values(ascending=False)
+                .head(3)
+            )
+
+            for idx, (name, val) in enumerate(top3_stores.items()):
+                st.write(f"{idx+1}. **{name}**: {fmt_curr(val)}")
+
+            # Build compact GPT-4o context from full uploaded CSV chunk results
+            monthly_context = "\n".join(
+                [f"{month}: {fmt_curr(value)}" for month, value in sorted(monthly_sales.items())]
+            )
+
+            top_store_context = "\n".join(
+                [f"{name}: {fmt_curr(value)}" for name, value in pd.Series(store_sales).sort_values(ascending=False).head(10).items()]
+            )
+
+            top_product_context = "\n".join(
+                [f"{name}: {fmt_curr(value)}" for name, value in pd.Series(product_sales).sort_values(ascending=False).head(10).items()]
+            ) if product_sales else "Product information not available."
+
+            top_county_context = "\n".join(
+                [f"{name}: {fmt_curr(value)}" for name, value in pd.Series(county_sales).sort_values(ascending=False).head(10).items()]
+            ) if county_sales else "County information not available."
+
+            top_vendor_context = "\n".join(
+                [f"{name}: {fmt_curr(value)}" for name, value in pd.Series(vendor_sales).sort_values(ascending=False).head(10).items()]
+            ) if vendor_sales else "Vendor information not available."
+
+            uploaded_context = f"""
+UPLOADED CSV SUMMARY:
+Rows analyzed: {total_rows:,}
+Total sales revenue: {fmt_curr(total_revenue)}
+Total bottles sold: {int(total_bottles):,}
+
+MONTHLY SALES REVENUE:
+{monthly_context}
+
+TOP STORES BY REVENUE:
+{top_store_context}
+
+TOP PRODUCTS BY REVENUE:
+{top_product_context}
+
+TOP COUNTIES BY REVENUE:
+{top_county_context}
+
+TOP VENDORS BY REVENUE:
+{top_vendor_context}
+"""
+
+            st.divider()
+            st.subheader("Ask GPT-4o About Uploaded CSV")
+
+            custom_question = st.text_input(
+                "Ask a question about your uploaded CSV",
+                placeholder="Example: Which store has the highest sales in this uploaded file?"
+            )
+
+            if st.button("Ask GPT-4o About Uploaded CSV"):
+                if not custom_question.strip():
+                    st.warning("Please enter a question.")
+                else:
+                    with st.spinner("GPT-4o is analyzing the uploaded file summary..."):
+                        custom_reply = ask_gpt4o_from_context(custom_question, uploaded_context)
+
+                    st.markdown("### GPT-4o Response")
+                    st.write(custom_reply["text"])
+                    st.caption(f"**Retrieved Context:** {custom_reply['citation']}")
 
         except Exception as e:
             st.error(f"Error parsing file: {e}")

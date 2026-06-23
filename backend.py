@@ -191,3 +191,51 @@ def ask_gpt4o(question: str, df: pd.DataFrame) -> dict:
         "text": response.choices[0].message.content.strip(),
         "citation": f"Pandas pre-aggregated context + GPT-4o API | Latency: {latency}s"
     }
+
+def ask_gpt4o_from_context(question: str, context: str) -> dict:
+    """
+    Sends a user question and pre-aggregated text context to GPT-4o.
+    Used for large uploaded CSV files where loading the full dataframe into memory is not ideal.
+    """
+
+    api_key = get_openai_api_key()
+
+    if not api_key:
+        return {
+            "text": (
+                "GPT-4o API key is not configured. "
+                "Set OPENAI_API_KEY in Streamlit Secrets or as an environment variable."
+            ),
+            "citation": "No API key configured | Live GPT-4o call skipped"
+        }
+
+    client = OpenAI(api_key=api_key)
+
+    start = time.time()
+
+    response = client.chat.completions.create(
+        model="gpt-4o",
+        temperature=0,
+        max_tokens=450,
+        messages=[
+            {
+                "role": "system",
+                "content": (
+                    "You are a data analyst. Answer only using the provided uploaded CSV summary context. "
+                    "Do not invent numbers. If the answer is not available in the context, say so clearly. "
+                    "Be concise and include specific values when available."
+                )
+            },
+            {
+                "role": "user",
+                "content": f"{context}\n\nUser question: {question}"
+            }
+        ]
+    )
+
+    latency = round(time.time() - start, 2)
+
+    return {
+        "text": response.choices[0].message.content.strip(),
+        "citation": f"Uploaded CSV chunk summary + GPT-4o API | Latency: {latency}s"
+    }

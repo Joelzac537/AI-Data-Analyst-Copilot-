@@ -189,32 +189,42 @@ if nav_page == "Overview & EDA":
 
     st.divider()
 
-    # New visual 1: Dynamic Top 10 Bar Chart
-    st.subheader(f"Top 10 {rank_type} by Sales Revenue")
+    # New visual 1: Top 10 Counties Bar Chart
+    st.subheader("Top 10 Counties by Sales Revenue")
 
-    top10_bar = (
-        alt.Chart(top10)
-        .mark_bar()
-        .encode(
-            y=alt.Y(
-                "name:N",
-                sort="-x",
-                title=f"{rank_type[:-1]} Name"
-            ),
-            x=alt.X(
-                "sales_dollars:Q",
-                title="Revenue ($)",
-                axis=alt.Axis(format="$,.0f")
-            ),
-            tooltip=[
-                alt.Tooltip("name:N", title=f"{rank_type[:-1]}"),
-                alt.Tooltip("sales_dollars:Q", title="Revenue", format="$,.2f")
-            ]
-        )
-        .properties(height=380)
+    top_counties_bar_df = (
+    df.groupby("county_name")["sales_dollars"]
+    .sum()
+    .sort_values(ascending=False)
+    .head(10)
+    .reset_index()
+)
+
+    top_counties_bar_df.columns = ["county_name", "sales_dollars"]
+
+    top_counties_bar = (
+    alt.Chart(top_counties_bar_df)
+    .mark_bar()
+    .encode(
+        y=alt.Y(
+            "county_name:N",
+            sort="-x",
+            title="County"
+        ),
+        x=alt.X(
+            "sales_dollars:Q",
+            title="Revenue ($)",
+            axis=alt.Axis(format="$,.0f")
+        ),
+        tooltip=[
+            alt.Tooltip("county_name:N", title="County"),
+            alt.Tooltip("sales_dollars:Q", title="Revenue", format="$,.2f")
+        ]
     )
+    .properties(height=380)
+)
 
-    st.altair_chart(top10_bar, width="stretch")
+    st.altair_chart(top_counties_bar, width="stretch")
 
     st.divider()
 
@@ -222,7 +232,7 @@ if nav_page == "Overview & EDA":
     st.subheader("Product Revenue vs. Bottles Sold")
 
     st.markdown(
-        "This visual compares product-level sales volume with revenue to identify products that generate high revenue from high volume."
+    "This visual compares product-level sales volume with revenue to identify high-volume products, premium revenue drivers, and outliers."
     )
 
     product_scatter = (
